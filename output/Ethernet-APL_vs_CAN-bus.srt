@@ -1,0 +1,1269 @@
+1
+00:00:00,600 --> 00:00:04,042
+Somewhere in a chemical plant, a radar
+level transmitter
+
+2
+00:00:04,042 --> 00:00:07,299
+watches the surface of a liquid, twenty
+meters below.
+
+3
+00:00:07,719 --> 00:00:11,563
+It knows the full echo profile, its own
+electronics temperature,
+
+4
+00:00:11,563 --> 00:00:14,567
+the condition of its antenna, and weeks of
+trends.
+
+5
+00:00:14,917 --> 00:00:16,559
+And it reports — one number.
+
+6
+00:00:16,979 --> 00:00:20,286
+A current between four and twenty
+milliamps, on two wires.
+
+7
+00:00:20,706 --> 00:00:25,705
+If you're lucky, a trickle of digital data
+rides along at 1,200 bits per second
+
+8
+00:00:25,705 --> 00:00:28,237
+— the speed of an early telephone modem.
+
+9
+00:00:28,600 --> 00:00:30,901
+Meanwhile, a few hundred meters away,
+
+10
+00:00:30,901 --> 00:00:35,939
+the office network moves a billion bits
+per second — almost a million times more.
+
+11
+00:00:37,500 --> 00:00:40,831
+This video is about the technology that
+finally brings
+
+12
+00:00:40,831 --> 00:00:44,348
+Ethernet all the way out to the
+instrument: Ethernet-APL.
+
+13
+00:00:45,400 --> 00:00:48,877
+We'll take it apart down to the volts, the
+symbols, and the joules.
+
+14
+00:00:49,297 --> 00:00:52,509
+And as a reference point, we'll use a
+network that many
+
+15
+00:00:52,509 --> 00:00:55,953
+engineers already know from vehicles and
+machines: CAN bus.
+
+16
+00:01:00,616 --> 00:01:04,456
+Process instruments have spoken the same
+basic language for decades.
+
+17
+00:01:04,876 --> 00:01:08,447
+The 4–20 mA loop is brilliantly simple:
+two wires,
+
+18
+00:01:08,447 --> 00:01:12,876
+one analog value, and the same two wires
+power the instrument.
+
+19
+00:01:13,296 --> 00:01:16,246
+Four milliamps, not zero, means zero
+percent
+
+20
+00:01:16,246 --> 00:01:18,928
+— so a broken wire is instantly obvious.
+
+21
+00:01:19,982 --> 00:01:25,300
+In the 1980s, HART added digital
+communication by superimposing a small
+
+22
+00:01:25,300 --> 00:01:30,393
+tone on that current: 1,200 hertz for a
+one, 2,200 hertz for a zero.
+
+23
+00:01:30,813 --> 00:01:35,173
+Because the tone averages to zero, the
+analog value is untouched
+
+24
+00:01:35,173 --> 00:01:38,578
+— but the data rate is only 1,200 bits per
+second.
+
+25
+00:01:39,632 --> 00:01:46,269
+In the 1990s, fieldbuses such as
+FOUNDATION Fieldbus H1 and PROFIBUS PA
+went fully
+
+26
+00:01:46,269 --> 00:01:52,582
+digital, at 31.25 kilobits per second —
+shared by every device on the segment.
+
+27
+00:01:53,632 --> 00:01:56,496
+Meanwhile, the rest of industry moved to
+Ethernet,
+
+28
+00:01:56,496 --> 00:01:58,902
+at a hundred megabits per second and more.
+
+29
+00:01:59,322 --> 00:02:02,052
+On a logarithmic scale, the gap is
+enormous.
+
+30
+00:02:03,116 --> 00:02:06,294
+So why didn't plain Ethernet simply run
+out into the plant?
+
+31
+00:02:06,714 --> 00:02:08,229
+Four walls stood in the way.
+
+32
+00:02:08,582 --> 00:02:09,436
+Distance.
+
+33
+00:02:09,856 --> 00:02:14,633
+Standard 100BASE-TX Ethernet is limited to
+one hundred meters per link,
+
+34
+00:02:14,633 --> 00:02:19,882
+while field cables run for hundreds of
+meters — sometimes a kilometer or more.
+
+35
+00:02:20,249 --> 00:02:21,081
+Wires.
+
+36
+00:02:21,501 --> 00:02:23,939
+Office Ethernet needs two or four pairs;
+
+37
+00:02:23,939 --> 00:02:26,621
+plants are full of installed two-wire
+cable.
+
+38
+00:02:26,982 --> 00:02:27,729
+Power.
+
+39
+00:02:28,149 --> 00:02:30,666
+A field instrument has no local supply.
+
+40
+00:02:31,086 --> 00:02:34,628
+It must be powered over the same two wires
+that carry its signal.
+
+41
+00:02:34,982 --> 00:02:36,454
+And explosion protection.
+
+42
+00:02:36,874 --> 00:02:40,438
+In hazardous areas, the energy in a
+circuit must be limited,
+
+43
+00:02:40,438 --> 00:02:43,466
+so that not even a fault can ignite the
+atmosphere.
+
+44
+00:02:43,886 --> 00:02:46,830
+Ordinary Ethernet was never designed for
+that.
+
+45
+00:02:47,682 --> 00:02:53,100
+Ethernet-APL — the Advanced Physical Layer
+— was designed to break all four walls.
+
+46
+00:02:53,520 --> 00:02:55,056
+The key word is “physical”.
+
+47
+00:02:58,715 --> 00:03:02,404
+APL replaces only the bottom layer of the
+network stack:
+
+48
+00:03:02,404 --> 00:03:06,224
+the copper, the voltages, the power, and
+the safety rules.
+
+49
+00:03:06,644 --> 00:03:12,861
+Everything above it is unchanged Ethernet:
+the same frames and MAC addresses,
+
+50
+00:03:12,861 --> 00:03:17,060
+IP, TCP and UDP, and the industrial
+protocols on top
+
+51
+00:03:17,060 --> 00:03:21,259
+— PROFINET, EtherNet/IP, HART-IP, OPC UA,
+Modbus TCP
+
+52
+00:03:21,259 --> 00:03:24,650
+— even a web server inside the instrument.
+
+53
+00:03:25,615 --> 00:03:32,302
+Its foundation is 10BASE-T1L, part of the
+IEEE 802.3cg standard from 2019: ten
+
+54
+00:03:32,302 --> 00:03:39,503
+megabits per second, full duplex, over a
+single twisted pair, for up to a
+kilometer.
+
+55
+00:03:39,923 --> 00:03:45,590
+On top of that, the APL project — a joint
+effort of FieldComm Group, ODVA,
+
+56
+00:03:45,590 --> 00:03:50,109
+the OPC Foundation, and PROFIBUS and
+PROFINET International
+
+57
+00:03:50,109 --> 00:03:52,636
+— added what process plants need:
+
+58
+00:03:52,636 --> 00:03:57,844
+port profiles that define how power is
+delivered over the same pair,
+
+59
+00:03:57,844 --> 00:04:00,065
+standardized as IEC TS 63444,
+
+60
+00:04:00,065 --> 00:04:05,886
+and an intrinsic-safety concept called
+2-WISE, published as IEC TS 60079-47.
+
+61
+00:04:06,848 --> 00:04:11,189
+The result: two wires, ten megabits per
+second in both directions,
+
+62
+00:04:11,189 --> 00:04:12,767
+power and data together,
+
+63
+00:04:12,767 --> 00:04:14,543
+trunks up to one kilometer,
+
+64
+00:04:14,543 --> 00:04:18,752
+and intrinsically safe spurs that reach
+all the way into Zone 0.
+
+65
+00:04:23,415 --> 00:04:26,487
+Before we open up APL, let's set up our
+reference.
+
+66
+00:04:26,907 --> 00:04:29,361
+CAN, the Controller Area Network,
+
+67
+00:04:29,361 --> 00:04:35,014
+was presented by Bosch in 1986 to tame the
+growing tangle of wiring in cars.
+
+68
+00:04:35,434 --> 00:04:39,807
+Today it's everywhere: vehicles, tractors,
+robots, medical devices.
+
+69
+00:04:40,765 --> 00:04:42,957
+Physically, CAN is one twisted pair,
+
+70
+00:04:42,957 --> 00:04:46,184
+called CAN high and CAN low, running past
+every node.
+
+71
+00:04:46,604 --> 00:04:50,110
+A 120-ohm resistor at each end matches the
+cable's
+
+72
+00:04:50,110 --> 00:04:53,686
+characteristic impedance, so signals don't
+reflect.
+
+73
+00:04:54,648 --> 00:04:56,056
+CAN has two bus states.
+
+74
+00:04:56,476 --> 00:05:00,853
+In the recessive state, nobody drives the
+bus: the termination resistors
+
+75
+00:05:00,853 --> 00:05:05,351
+pull both wires to about two and a half
+volts, and the difference is zero.
+
+76
+00:05:05,771 --> 00:05:10,643
+To send a dominant bit, a transceiver
+pushes CAN high up to about three and a
+half
+
+77
+00:05:10,643 --> 00:05:15,456
+volts and pulls CAN low down to one and a
+half — a difference of about two volts.
+
+78
+00:05:15,815 --> 00:05:17,884
+The receiver looks only at the difference.
+
+79
+00:05:18,304 --> 00:05:22,926
+It's exactly like a differential-pressure
+transmitter, which ignores the static
+
+80
+00:05:22,926 --> 00:05:27,840
+line pressure: interference that couples
+equally into both wires simply cancels
+out.
+
+81
+00:05:28,260 --> 00:05:31,332
+APL, as we'll see, uses the very same
+trick.
+
+82
+00:05:32,798 --> 00:05:34,270
+Now the crucial property.
+
+83
+00:05:34,690 --> 00:05:36,248
+Dominant always wins.
+
+84
+00:05:36,668 --> 00:05:40,451
+If even one node drives a dominant zero,
+the bus is dominant,
+
+85
+00:05:40,451 --> 00:05:43,366
+no matter how many others send a recessive
+one.
+
+86
+00:05:43,786 --> 00:05:48,480
+Engineers call this a wired-AND, and CAN
+builds its entire access method on it.
+
+87
+00:05:49,432 --> 00:05:52,504
+Suppose three nodes start a frame at the
+same instant.
+
+88
+00:05:52,924 --> 00:05:57,958
+Each one sends its eleven-bit identifier,
+bit by bit, while listening to the bus.
+
+89
+00:05:58,378 --> 00:06:02,214
+At the fifth bit, the cabin-temperature
+node sends a recessive one,
+
+90
+00:06:02,214 --> 00:06:03,989
+but reads back a dominant zero.
+
+91
+00:06:04,409 --> 00:06:07,269
+Someone with a more important message is
+talking,
+
+92
+00:06:07,269 --> 00:06:09,721
+so it stops immediately, and just listens.
+
+93
+00:06:10,141 --> 00:06:13,768
+Three bits later, the engine-speed node
+loses the same way.
+
+94
+00:06:14,188 --> 00:06:17,598
+The brake-pressure message, with the
+lowest identifier,
+
+95
+00:06:17,598 --> 00:06:20,140
+wins — and its frame continues undamaged.
+
+96
+00:06:20,560 --> 00:06:23,824
+No collision, no retransmission, no time
+lost.
+
+97
+00:06:24,244 --> 00:06:28,468
+This is bitwise arbitration, and it's why
+CAN is so deterministic:
+
+98
+00:06:28,468 --> 00:06:31,860
+the most important message always gets
+through first.
+
+99
+00:06:32,815 --> 00:06:36,374
+A classic CAN frame carries at most eight
+bytes of data,
+
+100
+00:06:36,374 --> 00:06:38,980
+wrapped in nearly fifty bits of overhead:
+
+101
+00:06:38,980 --> 00:06:42,031
+the identifier, control bits, a fifteen-
+bit CRC,
+
+102
+00:06:42,031 --> 00:06:45,082
+an acknowledge slot, and an end-of-frame
+marker.
+
+103
+00:06:45,448 --> 00:06:50,060
+After five identical bits, the transmitter
+inserts one opposite stuff bit,
+
+104
+00:06:50,060 --> 00:06:52,552
+so the receivers never lose their clock.
+
+105
+00:06:53,515 --> 00:06:56,566
+Notice what's missing: there's no
+destination address.
+
+106
+00:06:56,986 --> 00:07:00,387
+The identifier names the content, like
+“engine speed”,
+
+107
+00:07:00,387 --> 00:07:03,599
+and every node decides for itself whether
+it cares.
+
+108
+00:07:04,965 --> 00:07:08,186
+But arbitration has a price, and it is
+paid in meters.
+
+109
+00:07:08,606 --> 00:07:10,117
+For the wired-AND to work,
+
+110
+00:07:10,117 --> 00:07:13,834
+a dominant bit from the far end of the bus
+must reach every node
+
+111
+00:07:13,834 --> 00:07:18,249
+— and the transmitter must read back the
+result — before the bit is sampled.
+
+112
+00:07:18,615 --> 00:07:21,452
+Signals travel about five nanoseconds per
+meter.
+
+113
+00:07:21,872 --> 00:07:24,350
+So the round trip to the far end and back,
+
+114
+00:07:24,350 --> 00:07:28,422
+plus the transceiver delays, has to fit
+inside a fraction of one bit.
+
+115
+00:07:28,842 --> 00:07:32,731
+At one megabit per second, a bit lasts
+just one microsecond,
+
+116
+00:07:32,731 --> 00:07:35,519
+which limits the bus to about forty
+meters.
+
+117
+00:07:35,882 --> 00:07:37,311
+Want two hundred meters?
+
+118
+00:07:37,731 --> 00:07:40,654
+Then slow down, so that every bit lasts
+long enough.
+
+119
+00:07:41,615 --> 00:07:44,324
+Plot the usual limits on logarithmic axes.
+
+120
+00:07:44,744 --> 00:07:46,088
+Five hundred meters?
+
+121
+00:07:46,508 --> 00:07:48,812
+125 kilobits per second.
+
+122
+00:07:49,232 --> 00:07:50,171
+A kilometer?
+
+123
+00:07:50,591 --> 00:07:51,594
+About fifty.
+
+124
+00:07:52,014 --> 00:07:56,408
+Bit rate times length is roughly constant:
+CAN trades speed for distance.
+
+125
+00:07:56,765 --> 00:08:00,285
+That's also why CAN FD only accelerates
+the data phase.
+
+126
+00:08:00,705 --> 00:08:03,971
+Once arbitration is over and a single node
+is talking,
+
+127
+00:08:03,971 --> 00:08:06,209
+the round-trip constraint disappears.
+
+128
+00:08:10,465 --> 00:08:13,686
+Now let's look at Ethernet-APL with the
+same eyes.
+
+129
+00:08:14,106 --> 00:08:15,408
+First, topology.
+
+130
+00:08:15,828 --> 00:08:17,214
+There is no shared bus.
+
+131
+00:08:17,634 --> 00:08:19,922
+Every link connects exactly two ports,
+
+132
+00:08:19,922 --> 00:08:23,053
+point to point, and switches tie the links
+together.
+
+133
+00:08:24,015 --> 00:08:26,831
+A typical plant uses a trunk-and-spur
+layout.
+
+134
+00:08:27,251 --> 00:08:30,374
+In the safe area, an APL power switch
+connects
+
+135
+00:08:30,374 --> 00:08:33,565
+to the plant network and feeds a trunk
+cable up
+
+136
+00:08:33,565 --> 00:08:37,095
+to one kilometer long, carrying both data
+and power,
+
+137
+00:08:37,095 --> 00:08:39,539
+with a 2.4-volt peak-to-peak signal.
+
+138
+00:08:39,898 --> 00:08:43,369
+Out in the hazardous area, a field switch
+takes that power
+
+139
+00:08:43,369 --> 00:08:46,960
+and distributes it over spurs up to two
+hundred meters long.
+
+140
+00:08:47,380 --> 00:08:49,870
+Each spur serves exactly one instrument,
+
+141
+00:08:49,870 --> 00:08:53,481
+with a lower one-volt signal and
+intrinsically safe power.
+
+142
+00:08:53,832 --> 00:08:57,508
+And because every spur is its own link,
+every instrument gets
+
+143
+00:08:57,508 --> 00:09:01,426
+its own ten megabits per second, in each
+direction, all the time.
+
+144
+00:09:01,846 --> 00:09:04,577
+Nothing is shared, so there's nothing to
+arbitrate.
+
+145
+00:09:06,332 --> 00:09:09,553
+Wait — both directions at the same time,
+on one pair?
+
+146
+00:09:09,973 --> 00:09:13,024
+In CAN, two transmitters driving the bus
+at once
+
+147
+00:09:13,024 --> 00:09:16,202
+is exactly the conflict that arbitration
+resolves.
+
+148
+00:09:16,622 --> 00:09:18,756
+In APL, it's the normal state.
+
+149
+00:09:19,115 --> 00:09:23,872
+Both ends transmit continuously, and on
+the wire the two signals simply add up.
+
+150
+00:09:24,292 --> 00:09:29,320
+So each receiver sees the far-end signal —
+weakened by up to about 25 dB
+
+151
+00:09:29,320 --> 00:09:34,767
+after a kilometer of cable — buried under
+its own, much stronger transmission.
+
+152
+00:09:35,132 --> 00:09:38,758
+The trick is that every transceiver knows
+exactly what it just sent.
+
+153
+00:09:39,178 --> 00:09:43,889
+An adaptive digital filter — the echo
+canceller — learns how its own signal
+
+154
+00:09:43,889 --> 00:09:48,224
+appears at its input, including
+reflections, and subtracts that copy.
+
+155
+00:09:48,644 --> 00:09:50,329
+What remains is the far end.
+
+156
+00:09:50,749 --> 00:09:53,864
+It's the same principle as noise-
+cancelling headphones.
+
+157
+00:09:54,915 --> 00:09:58,456
+So here is the deepest difference between
+the two physical layers.
+
+158
+00:09:58,876 --> 00:10:02,688
+CAN uses a nonlinear medium, where
+dominant beats recessive,
+
+159
+00:10:02,688 --> 00:10:04,530
+so that nodes can take turns.
+
+160
+00:10:04,950 --> 00:10:10,582
+APL uses a linear medium plus signal
+processing, so that both ends can talk at
+once.
+
+161
+00:10:12,248 --> 00:10:15,651
+Next: how do you push ten megabits per
+second through a
+
+162
+00:10:15,651 --> 00:10:19,672
+kilometer of cable originally designed for
+slow fieldbus signals?
+
+163
+00:10:20,092 --> 00:10:21,649
+You keep the frequencies low.
+
+164
+00:10:22,515 --> 00:10:25,544
+CAN uses two voltage levels: one bit per
+symbol.
+
+165
+00:10:25,964 --> 00:10:29,804
+10BASE-T1L uses three: plus, zero, and
+minus.
+
+166
+00:10:30,224 --> 00:10:31,867
+This is called PAM-3.
+
+167
+00:10:32,831 --> 00:10:37,631
+The coder takes four data bits at a time
+and maps them onto three ternary symbols.
+
+168
+00:10:38,051 --> 00:10:42,467
+Four bits have sixteen combinations; three
+ternary symbols have twenty-seven.
+
+169
+00:10:42,887 --> 00:10:46,127
+The spare codes let the encoder choose, at
+every step,
+
+170
+00:10:46,127 --> 00:10:49,186
+the pattern that keeps the average voltage
+at zero,
+
+171
+00:10:49,186 --> 00:10:53,085
+so there's no DC drift — which matters, as
+we'll see in a moment.
+
+172
+00:10:54,048 --> 00:10:56,757
+Symbols are sent at 7.5 megabaud.
+
+173
+00:10:57,177 --> 00:10:59,890
+Seven and a half million symbols per
+second,
+
+174
+00:10:59,890 --> 00:11:04,452
+times four-thirds of a bit per symbol, is
+exactly ten megabits per second.
+
+175
+00:11:05,415 --> 00:11:09,959
+Because the data is scrambled first, the
+spectrum stays smooth, whatever you send.
+
+176
+00:11:10,379 --> 00:11:16,172
+Most of the energy sits below the Nyquist
+frequency of 3.75 megahertz, where a
+
+177
+00:11:16,172 --> 00:11:22,261
+kilometer of cable costs about 25 dB — a
+loss the receiver's equalizer can handle.
+
+178
+00:11:23,915 --> 00:11:27,947
+Power travels on the same two wires, and
+the trick is frequency, again.
+
+179
+00:11:28,367 --> 00:11:30,969
+Power is direct current, at zero hertz.
+
+180
+00:11:31,389 --> 00:11:35,881
+The data lives between roughly a hundred
+kilohertz and a few megahertz
+
+181
+00:11:35,881 --> 00:11:39,987
+— and, thanks to the DC-free code, it
+contains no DC of its own.
+
+182
+00:11:40,948 --> 00:11:42,675
+So at each end of the cable,
+
+183
+00:11:42,675 --> 00:11:46,560
+inductors pass the direct current to and
+from the power supply,
+
+184
+00:11:46,560 --> 00:11:49,397
+but block the fast data, while capacitors
+pass
+
+185
+00:11:49,397 --> 00:11:52,233
+the data to the transceiver, but block the
+DC.
+
+186
+00:11:52,653 --> 00:11:56,971
+A mechanical engineer would recognize it
+immediately: a static load
+
+187
+00:11:56,971 --> 00:12:02,061
+with a vibration riding on top, separated
+by a low-pass and a high-pass filter.
+
+188
+00:12:03,015 --> 00:12:04,060
+How much power?
+
+189
+00:12:04,480 --> 00:12:07,106
+An APL power switch can feed a trunk with
+up
+
+190
+00:12:07,106 --> 00:12:09,493
+to about ninety-two watts at the source.
+
+191
+00:12:09,913 --> 00:12:13,215
+An instrument on an intrinsically safe
+spur gets roughly
+
+192
+00:12:13,215 --> 00:12:16,399
+half a watt to one watt, depending on its
+power class.
+
+193
+00:12:16,819 --> 00:12:21,057
+That sounds modest — but it's more than
+ten times the forty milliwatts or
+
+194
+00:12:21,057 --> 00:12:24,541
+so that a four-to-twenty milliamp
+instrument has to live on.
+
+195
+00:12:28,898 --> 00:12:31,650
+Now the fourth wall: explosive
+atmospheres.
+
+196
+00:12:32,070 --> 00:12:36,529
+An explosion needs three things: fuel,
+oxygen, and an ignition source.
+
+197
+00:12:36,949 --> 00:12:40,149
+In a process plant, you can't always
+remove the first two.
+
+198
+00:12:41,315 --> 00:12:43,299
+Areas are classified into zones.
+
+199
+00:12:43,719 --> 00:12:48,884
+Zone 0: an explosive atmosphere is present
+continuously or for long periods
+
+200
+00:12:48,884 --> 00:12:50,951
+— inside a tank, for instance.
+
+201
+00:12:51,371 --> 00:12:53,931
+Zone 1: likely in normal operation.
+
+202
+00:12:54,351 --> 00:12:57,807
+Zone 2: not expected, and only briefly if
+it happens.
+
+203
+00:12:58,765 --> 00:13:01,538
+Intrinsic safety removes the ignition
+source.
+
+204
+00:13:01,958 --> 00:13:06,380
+Voltage, current and power are limited —
+and so is the energy stored
+
+205
+00:13:06,380 --> 00:13:10,606
+in the circuit's capacitance and
+inductance, one half C V squared
+
+206
+00:13:10,606 --> 00:13:15,028
+and one half L I squared — so that even
+the spark from a broken wire
+
+207
+00:13:15,028 --> 00:13:19,579
+or a short circuit stays below the minimum
+ignition energy of the gas.
+
+208
+00:13:19,999 --> 00:13:23,029
+For hydrogen, that's only about twenty
+microjoules.
+
+209
+00:13:24,081 --> 00:13:26,651
+Protection level “i-a” means the circuit
+
+210
+00:13:26,651 --> 00:13:29,543
+stays safe even with two simultaneous
+faults.
+
+211
+00:13:29,963 --> 00:13:32,160
+That's what's required to enter Zone 0.
+
+212
+00:13:33,115 --> 00:13:37,160
+Traditionally, every intrinsically safe
+loop needed a calculation:
+
+213
+00:13:37,160 --> 00:13:38,753
+does the source's voltage,
+
+214
+00:13:38,753 --> 00:13:40,776
+current and power fit the device,
+
+215
+00:13:40,776 --> 00:13:44,699
+and does the cable's capacitance and
+inductance fit what's left?
+
+216
+00:13:45,119 --> 00:13:48,276
+2-WISE replaces that with predefined port
+profiles.
+
+217
+00:13:48,696 --> 00:13:53,180
+A 2-WISE field-switch port and a 2-WISE
+instrument with matching profiles
+
+218
+00:13:53,180 --> 00:13:57,848
+are designed to be safe together, on up to
+two hundred meters of spur cable.
+
+219
+00:13:58,268 --> 00:14:02,364
+You compare the labels, and you're done —
+much like FISCO did for fieldbus.
+
+220
+00:14:02,715 --> 00:14:05,800
+CAN has no standardized plug-and-play
+equivalent:
+
+221
+00:14:05,800 --> 00:14:10,459
+intrinsically safe CAN systems exist, but
+they're engineered case by case.
+
+222
+00:14:10,879 --> 00:14:14,719
+For APL, intrinsic safety was a design
+goal from day one.
+
+223
+00:14:19,081 --> 00:14:20,873
+Let's put the two side by side.
+
+224
+00:14:21,293 --> 00:14:22,168
+Bandwidth.
+
+225
+00:14:22,588 --> 00:14:25,566
+On classic CAN, one megabit per second at
+most —
+
+226
+00:14:25,566 --> 00:14:29,351
+and that's at forty meters — shared by
+every node on the bus.
+
+227
+00:14:29,771 --> 00:14:32,544
+With ten nodes, each gets, on average, a
+tenth.
+
+228
+00:14:32,964 --> 00:14:38,297
+On APL, every device has a private ten
+megabits per second, in each direction.
+
+229
+00:14:39,248 --> 00:14:40,101
+Distance.
+
+230
+00:14:40,521 --> 00:14:43,273
+Back to our chart of bit rate versus cable
+length.
+
+231
+00:14:43,693 --> 00:14:47,277
+CAN falls along that diagonal: double the
+length, halve the speed.
+
+232
+00:14:47,697 --> 00:14:53,009
+10BASE-T1L stays flat at ten megabits per
+second, all the way to a kilometer.
+
+233
+00:14:53,429 --> 00:14:56,629
+Its speed-distance product is about two
+hundred times higher.
+
+234
+00:14:57,581 --> 00:14:58,413
+Frames.
+
+235
+00:14:58,833 --> 00:15:02,183
+A CAN frame carries up to eight bytes, and
+names its content.
+
+236
+00:15:02,603 --> 00:15:05,927
+An Ethernet frame carries up to fifteen
+hundred bytes,
+
+237
+00:15:05,927 --> 00:15:09,560
+and names its destination and its source
+with MAC addresses
+
+238
+00:15:09,560 --> 00:15:14,485
+— while IP addresses let it be routed
+across the whole plant network, or beyond.
+
+239
+00:15:15,448 --> 00:15:16,941
+What does that mean in practice?
+
+240
+00:15:17,361 --> 00:15:21,393
+Take one megabyte — say, a firmware
+update, or a diagnostic log.
+
+241
+00:15:21,813 --> 00:15:23,669
+Over HART: almost two hours.
+
+242
+00:15:24,089 --> 00:15:26,265
+Over a fieldbus: about four minutes.
+
+243
+00:15:26,685 --> 00:15:30,355
+Over CAN at one megabit per second: around
+fifteen seconds.
+
+244
+00:15:30,775 --> 00:15:33,505
+Over Ethernet-APL: less than a second.
+
+245
+00:15:34,465 --> 00:15:38,497
+Power, and hazardous areas: CAN leaves
+both to the system designer.
+
+246
+00:15:38,917 --> 00:15:44,122
+APL delivers power over the data pair, and
+it is intrinsically safe by design.
+
+247
+00:15:46,581 --> 00:15:48,352
+So is APL simply better?
+
+248
+00:15:48,772 --> 00:15:49,433
+No.
+
+249
+00:15:49,853 --> 00:15:54,336
+CAN is cheap: a CAN controller is built
+into countless microcontrollers,
+
+250
+00:15:54,336 --> 00:15:56,701
+and its frames are tiny and efficient.
+
+251
+00:15:57,121 --> 00:16:01,333
+Its arbitration gives hard, priority-based
+timing on short buses
+
+252
+00:16:01,333 --> 00:16:04,097
+— exactly what vehicles and machines need.
+
+253
+00:16:04,448 --> 00:16:07,176
+Ethernet-APL solves a different problem:
+
+254
+00:16:07,176 --> 00:16:10,654
+long cables, hazardous areas, power over
+two wires,
+
+255
+00:16:10,654 --> 00:16:13,178
+and rich data from every instrument —
+
+256
+00:16:13,178 --> 00:16:17,611
+using the same IP-based networking as the
+rest of the enterprise.
+
+257
+00:16:19,465 --> 00:16:20,574
+So, to sum up.
+
+258
+00:16:20,994 --> 00:16:22,253
+CAN is a party line.
+
+259
+00:16:22,673 --> 00:16:26,909
+Everyone shares one pair of wires, the
+most important voice always wins,
+
+260
+00:16:26,909 --> 00:16:29,969
+and speed and distance trade off against
+each other.
+
+261
+00:16:30,331 --> 00:16:34,006
+Ethernet-APL is a private line from every
+instrument:
+
+262
+00:16:34,006 --> 00:16:37,819
+point to point, full duplex, ten megabits
+per second up
+
+263
+00:16:37,819 --> 00:16:41,494
+to a kilometer, power and data on the same
+two wires,
+
+264
+00:16:41,494 --> 00:16:44,753
+and intrinsically safe all the way into
+Zone 0.
+
+265
+00:16:45,715 --> 00:16:47,101
+The four walls are down.
+
+266
+00:16:47,521 --> 00:16:52,337
+After decades of four to twenty milliamps,
+the process plant can finally speak the
+
+267
+00:16:52,337 --> 00:16:54,804
+same language as the rest of the network —
+
+268
+00:16:54,804 --> 00:16:57,271
+from the sensor, all the way to the cloud.
+
+269
+00:16:59,281 --> 00:17:00,519
+Thanks for watching.

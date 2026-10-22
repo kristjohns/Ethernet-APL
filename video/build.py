@@ -220,19 +220,21 @@ def cmd_assemble(args):
             i0 = int((ch["time"] - 0.35) * SR)
             seg = w[:, : max(0, min(w.shape[1], n - i0))]
             bed[:, i0:i0 + seg.shape[1]] += seg * voice_rms * 10 ** (-20 / 20) / (np.sqrt(np.mean(w ** 2)) + 1e-9) * 0.35
-    mix = np.stack([narr, narr]) + bed
-    mix_wav = adir / ("mix_nomusic.wav" if args.no_music else "mix.wav")
-    sf.write(mix_wav, mix.T, SR, subtype="FLOAT")
+    def normalise(stereo, name):
+        """EBU R128 two-pass loudness normalisation to -16 LUFS / -1.5 dBTP."""
+        raw = adir / f"{name}.wav"
+        sf.write(raw, stereo.T, SR, subtype="FLOAT")
+        r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(raw), "-af", "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json",
+                            "-f", "null", "-"], capture_output=True, text=True)
+        m = json.loads(r.stderr[r.stderr.rfind("{"): r.stderr.rfind("}") + 1])
+        out = adir / f"{name}_norm.wav"
+        af = ("loudnorm=I=-16:TP=-1.5:LRA=11:measured_I={input_i}:measured_TP={input_tp}:measured_LRA={input_lra}:"
+              "measured_thresh={input_thresh}:offset={target_offset}:linear=true").format(**m)
+        run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(raw), "-af", af, "-ar", str(SR), str(out)])
+        return out
 
-    # 5) loudness normalisation (EBU R128, two-pass) to -16 LUFS / -1.5 dBTP
-    r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(mix_wav), "-af", "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json",
-                        "-f", "null", "-"], capture_output=True, text=True)
-    js = r.stderr[r.stderr.rfind("{"): r.stderr.rfind("}") + 1]
-    m = json.loads(js)
-    norm_wav = adir / (mix_wav.stem + "_norm.wav")
-    af = ("loudnorm=I=-16:TP=-1.5:LRA=11:measured_I={input_i}:measured_TP={input_tp}:measured_LRA={input_lra}:"
-          "measured_thresh={input_thresh}:offset={target_offset}:linear=true").format(**m)
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(mix_wav), "-af", af, "-ar", str(SR), str(norm_wav)])
+    voice_only = normalise(narr[None, :], "mix_voice")          # mono: no downmix gain surprises
+    norm_wav = voice_only if args.no_music else normalise(np.stack([narr, narr]) + bed, "mix_music")
 
     # 6) subtitles, chapters, transcript
     srt = OUT / f"{STEM}.srt"
@@ -249,22 +251,32 @@ def cmd_assemble(args):
     suffix = "_voice-only" if args.no_music else ""
     final = OUT / f"{STEM}{suffix}.mp4"
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video_only), "-i", str(norm_wav), "-i", str(srt), "-i", str(meta)]
+    from apl.backdrop import make as make_backdrop
+    w, h, fps = probe_video(video_only)
+    cmd += ["-loop", "1", "-framerate", fps, "-i", str(make_backdrop(w, h)), "-i", str(voice_only)]
     if args.backdrop:
-        from apl.backdrop import make as make_backdrop
-        w, h, fps = probe_video(video_only)
-        cmd += ["-loop", "1", "-framerate", fps, "-i", str(make_backdrop(w, h))]
         cmd += ["-filter_complex", "[0:v]format=gbrp[a];[4:v]format=gbrp[b];[a][b]blend=all_mode=lighten:shortest=1,format=yuv420p[v]",
                 "-map", "[v]"]
     else:
         cmd += ["-map", "0:v"]
-    cmd += ["-map", "1:a", "-map", "2:s", "-map_metadata", "3", "-map_chapters", "3"]
+    cmd += ["-map", "1:a"]
+    if not args.no_music:
+        cmd += ["-map", "5:a"]
+    cmd += ["-map", "2:s", "-map_metadata", "3", "-map_chapters", "3"]
+    track0 = "Narration only" if args.no_music else "Narration + music"
     if args.reencode or args.backdrop:
         cmd += ["-c:v", "libx264", "-preset", args.preset, "-crf", str(args.crf), "-tune", "animation", "-pix_fmt", "yuv420p",
                 "-profile:v", "high", "-movflags", "+faststart"]
     else:
         cmd += ["-c:v", "copy", "-movflags", "+faststart"]
-    cmd += ["-c:a", "aac", "-b:a", "192k", "-c:s", "mov_text", "-metadata:s:s:0", "language=eng",
-            "-metadata:s:a:0", "language=eng", "-shortest", str(final)]
+    cmd += ["-c:a", "aac", "-b:a:0", "160k", "-b:a:1", "96k", "-c:s", "mov_text", "-metadata:s:s:0", "language=eng",
+            "-metadata:s:a:0", "language=eng", "-metadata:s:a:0", f"title={track0}",
+            "-metadata:s:a:0", f"handler_name={track0}", "-metadata:s:s:0", "handler_name=English", "-disposition:s:0", "0",
+            "-disposition:a:0", "default"]
+    if not args.no_music:
+        cmd += ["-metadata:s:a:1", "language=eng", "-metadata:s:a:1", "title=Narration only",
+                "-metadata:s:a:1", "handler_name=Narration only", "-disposition:a:1", "0"]
+    cmd += ["-shortest", str(final)]
     run(cmd)
     size = final.stat().st_size / 1e6
     print(f"wrote {final} ({size:.1f} MB), {srt.name}", flush=True)
@@ -275,7 +287,12 @@ def write_transcript(cues, chapters):
     out = [f"# Transcript — {TITLE}", "", "_Generated from the narration that is rendered into the video._", ""]
     ci = 0
     para = []
+    prev_end = None
     for c in cues:
+        if para and prev_end is not None and c["start"] - prev_end > 0.9:
+            out += [" ".join(para), ""]
+            para = []
+        prev_end = c["end"]
         while ci < len(chapters) and chapters[ci]["time"] <= c["start"] + 0.01:
             if para:
                 out += [" ".join(para), ""]
@@ -297,7 +314,7 @@ def main():
     ap.add_argument("--scenes", nargs="*")
     ap.add_argument("--no-music", action="store_true")
     ap.add_argument("--reencode", action="store_true", help="final x264 encode instead of stream copy")
-    ap.add_argument("--crf", type=int, default=20)
+    ap.add_argument("--crf", type=int, default=18)
     ap.add_argument("--preset", default="slow")
     ap.add_argument("--no-backdrop", dest="backdrop", action="store_false")
     args = ap.parse_args()

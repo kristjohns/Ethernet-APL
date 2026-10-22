@@ -275,7 +275,7 @@ class ColdOpen(APLScene):
         spin(tp, 0)
         self.add(tp)
         title = H("Ethernet-APL", size=110).move_to(UP * 1.75)
-        title_glow = title.copy().set_stroke(APL, 14, opacity=0.18).set_fill(opacity=0)
+        title_glow = glow(title.copy().set_stroke(APL, 2), APL, layers=7, max_width=26, max_opacity=0.16).set_z_index(-1)
         sub = T("Ethernet, all the way to the field instrument", size=32, color=MUTED).next_to(title, DOWN, buff=0.3)
         with self.voice(
             "This video is about the technology that finally brings Ethernet all the way out to the instrument: "
