@@ -60,7 +60,8 @@ def plant_map():
 
 class APLTopology(APLScene):
     def construct(self):
-        self.chapter(4, "Inside Ethernet-APL", "One pair · both directions · power included")
+        self.tag = corner_tag("04 · From coax to one pair")
+        self.add(self.tag)
 
         # ------------------------------------------------------------ bus -> point-to-point
         nodes = VGroup(*[device(f"Device {i + 1}", "cpu", CAN, width=1.5, height=1.05, label_size=17) for i in range(5)])

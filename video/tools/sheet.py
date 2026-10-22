@@ -12,7 +12,8 @@ ims = []
 for t in times:
     f = out / f"{name}_{t}.png"
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", t, "-i", video, "-frames:v", "1", str(f)], check=True)
-    ims.append(Image.open(f))
+    if f.exists():
+        ims.append(Image.open(f))
 w, h = ims[0].size
 rows = (len(ims) + 1) // 2
 sheet = Image.new("RGB", (w * 2, h * rows))

@@ -70,6 +70,38 @@ class Outro(APLScene):
             f.clear_updaters()
         self.clear(run_time=0.6)
 
+        # ------------------------------------------------------------ a century of ideas in one chip
+        ideas = [("1880s", "Heaviside", "waves on a line", BLUE), ("1928", "Nyquist", "2B symbols per second", BLUE),
+                 ("1948", "Shannon", "capacity and noise", BLUE), ("telephony", "the hybrid", "two directions, one pair", VIOLET),
+                 ("1960", "Widrow & Hoff", "adaptive filters", GOOD), ("1965", "Lucky", "adaptive equalizers", GOOD)]
+        cards = VGroup()
+        for yr, who, what, col in ideas:
+            lines = [T(yr, size=18, color=col, weight=BOLD), T(who, size=21, color=TEXT, weight=BOLD), T(what, size=15, color=MUTED)]
+            for ln in lines:
+                if ln.width > 1.85:
+                    ln.scale_to_fit_width(1.85)
+            c = VGroup(*lines).arrange(DOWN, buff=0.07)
+            box = RoundedRectangle(width=2.08, height=1.35, corner_radius=0.14, fill_color=PANEL, fill_opacity=1, stroke_color=col, stroke_width=1.8)
+            c.move_to(box)
+            cards.add(VGroup(box, c))
+        cards.arrange(RIGHT, buff=0.12).move_to(UP * 1.25)
+        chip = VGroup(RoundedRectangle(width=3.2, height=1.4, corner_radius=0.16, fill_color=PANEL, fill_opacity=1, stroke_color=APL, stroke_width=3),
+                      VGroup(T("10BASE-T1L PHY", size=24, color=APL, weight=BOLD), T("well under 0.1 W", size=18, color=MUTED)).arrange(DOWN, buff=0.08))
+        chip[1].move_to(chip[0])
+        chip.move_to(DOWN * 1.75)
+        pins = VGroup(*[Line([x, chip[0].get_top()[1], 0], [x, chip[0].get_top()[1] + 0.18, 0], stroke_color=APL, stroke_width=3) for x in np.linspace(-1.3, 1.3, 9)],
+                      *[Line([x, chip[0].get_bottom()[1], 0], [x, chip[0].get_bottom()[1] - 0.18, 0], stroke_color=APL, stroke_width=3) for x in np.linspace(-1.3, 1.3, 9)])
+        arrows = VGroup(*[Arrow(c.get_bottom(), chip[0].get_top() + UP * 0.2 + RIGHT * (c.get_x() * 0.12), buff=0.08, stroke_width=2, color=DIM, tip_length=0.1) for c in cards])
+        with self.voice(
+            "{under}And underneath that private line sits more than a century of ideas: {ideas}Heaviside's waves, Nyquist's "
+            "and Shannon's limits, the telephone hybrid, Widrow and Hoff's adaptive filters, Lucky's equalizers. {chip}All "
+            "of it packed into a transceiver chip that runs on well under a tenth of a watt."
+        ) as v:
+            v.wait_until("ideas")
+            self.play(LaggedStart(*[FadeIn(c, shift=DOWN * 0.15) for c in cards], lag_ratio=0.3), run_time=v.until("chip", 3.0))
+            self.play(LaggedStart(*[GrowArrow(a) for a in arrows], lag_ratio=0.08), FadeIn(chip, shift=UP * 0.15), FadeIn(pins), run_time=1.2)
+        self.clear(run_time=0.6)
+
         # ------------------------------------------------------------ four walls down + sensor to cloud
         walls = VGroup()
         for ic, txt, col in [("ruler-measure", "1000 m", BLUE), ("plug", "2 wires", APL), ("bolt", "power", POWER), ("flame", "Zone 0", HAZARD)]:
@@ -101,13 +133,14 @@ class Outro(APLScene):
 
         # ------------------------------------------------------------ end card
         title = H("Ethernet-APL", size=84, color=APL)
-        vs = T("and how it differs from CAN bus", size=30, color=MUTED)
+        vs = T("a deep dive — and how it differs from CAN bus", size=30, color=MUTED)
         thanks = T("Thanks for watching.", size=34, color=TEXT, weight=BOLD)
         top = VGroup(title, vs).arrange(DOWN, buff=0.25).move_to(UP * 1.3)
         thanks.next_to(top, DOWN, buff=0.7)
         src = VGroup(
             T("Key references: IEEE 802.3cg-2019 (10BASE-T1L) · IEC TS 60079-47 (2-WISE) · IEC TS 63444 (APL port profiles)", size=16, color=MUTED),
             T("ISO 11898-1/-2 (CAN) · Ethernet-APL Engineering Guideline · CAN in Automation (CiA)", size=16, color=MUTED),
+            T("Thomson 1855 · Heaviside 1880s · Nyquist 1928 · Hartley 1928 · Shannon 1948 · Widrow & Hoff 1960 · Lucky 1965", size=16, color=MUTED),
             T("Animation: Manim · Narration: Kokoro neural TTS · Icons: Tabler (MIT)", size=16, color=DIM),
         ).arrange(DOWN, buff=0.12).to_edge(DOWN, buff=0.5)
         with self.voice("Thanks for watching.", pad=2.5) as v:

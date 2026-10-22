@@ -11,7 +11,9 @@ from apl.widgets import *
 
 class HeadToHead(APLScene):
     def construct(self):
-        self.chapter(6, "Head to head", "CAN bus vs. Ethernet-APL", color=TEXT)
+        self.tag = corner_tag("10 · Intrinsic safety", color=HAZARD)
+        self.add(self.tag)
+        self.chapter(11, "Head to head", "CAN bus vs. Ethernet-APL", color=TEXT)
 
         # ------------------------------------------------------------ bandwidth per device
         left = panel(6.5, 5.6).move_to([-3.5, -0.3, 0])
@@ -205,7 +207,42 @@ class HeadToHead(APLScene):
             hl = VGroup(SurroundingRectangle(trows[6], color=POWER, buff=0.06, corner_radius=0.06),
                         SurroundingRectangle(trows[7], color=HAZARD, buff=0.06, corner_radius=0.06))
             self.play(Create(hl), run_time=0.7)
-        self.wait(1.5)
+        self.wait(1.0)
+        self.clear(run_time=0.6)
+
+        # ------------------------------------------------------------ the physical layers, side by side
+        rows_p = [
+            ("Signal levels", "2: dominant / recessive", "3: PAM-3 at 7.5 MBd"),
+            ("Coding", "NRZ + bit stuffing", "scrambler + 4B3T, DC-free"),
+            ("Timing", "resync on occasional edges", "PLL; slave loop-timed"),
+            ("Two talkers", "wired-AND: dominant wins", "linear sum + echo cancellation"),
+            ("Equalization", "none needed", "adaptive FFE + DFE"),
+            ("Termination", "120 Ω at both bus ends", "100 Ω in each transceiver"),
+        ]
+        head2 = VGroup(T("physical layer", size=20, color=MUTED, weight=BOLD), T("CAN (classic)", size=24, color=CAN, weight=BOLD),
+                       T("Ethernet-APL", size=24, color=APL, weight=BOLD))
+        for j, h in enumerate(head2):
+            h.move_to([cx[j], 2.45, 0])
+        prow = VGroup()
+        for i, (a_, b_, c_) in enumerate(rows_p):
+            y = 1.7 - i * 0.72
+            prow.add(VGroup(T(a_, size=20, color=MUTED, weight=BOLD).move_to([cx[0], y, 0]),
+                            T(b_, size=20, color=TEXT).move_to([cx[1], y, 0]),
+                            T(c_, size=20, color=TEXT).move_to([cx[2], y, 0])))
+        stripes2 = VGroup(*[Rectangle(width=13.2, height=0.66, fill_color=PANEL, fill_opacity=0.7 if i % 2 == 0 else 0.0, stroke_width=0).move_to([0, 1.7 - i * 0.72, 0]) for i in range(len(rows_p))])
+        with self.voice(
+            "{phy}And underneath, the two physical layers could hardly be more different. {can}CAN: two levels, bit "
+            "stuffing, timing from occasional edges, a nonlinear wired-AND, and no signal processing at all. {apl}APL: "
+            "three levels, scrambled and 4B3T-coded, a phase-locked clock, a linear line with echo cancellation, and "
+            "adaptive equalization."
+        ) as v:
+            self.play(FadeIn(head2), FadeIn(stripes2), run_time=0.5)
+            self.play(LaggedStart(*[FadeIn(r[0]) for r in prow], lag_ratio=0.1), run_time=1.0)
+            v.wait_until("can")
+            self.play(LaggedStart(*[FadeIn(r[1], shift=RIGHT * 0.08) for r in prow], lag_ratio=0.25), run_time=2.4)
+            v.wait_until("apl")
+            self.play(LaggedStart(*[FadeIn(r[2], shift=RIGHT * 0.08) for r in prow], lag_ratio=0.25), run_time=2.4)
+        self.wait(0.8)
         self.clear(run_time=0.6)
 
         # ------------------------------------------------------------ where each one shines

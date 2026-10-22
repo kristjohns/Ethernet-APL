@@ -14,8 +14,9 @@ def path_through(points):
 
 class PowerData(APLScene):
     def construct(self):
-        self.tag = corner_tag("04 · Inside Ethernet-APL")
+        self.tag = corner_tag("08 · Inside the receiver", color=BLUE)
         self.add(self.tag)
+        self.chapter(9, "Power on the same pair", "Inductors, capacitors, and I²R", color=POWER)
 
         # ------------------------------------------------------------ spectrum: DC vs data
         ax = Axes(x_range=[3, 8, 1], y_range=[0, 1.1, 0.5], x_length=8.2, y_length=3.4,
@@ -138,8 +139,68 @@ class PowerData(APLScene):
             self.play(FadeOut(c_note), FadeOut(c_note2), FadeIn(strip), Create(sig), Create(base), FadeIn(s_lbl), run_time=1.0)
             self.play(GrowArrow(arr1), GrowArrow(arr2), FadeIn(lp, shift=RIGHT * 0.1), FadeIn(hp, shift=RIGHT * 0.1), run_time=1.0)
 
+        # numbers: the two filters at DC and at the Nyquist frequency
+        self.play(FadeOut(VGroup(strip, sig, base, s_lbl, arr1, arr2, lp, hp)), run_time=0.5)
+        zl = VGroup(TeX(r"|Z_L| = \omega L", size=34, color=POWER),
+                    TeX(r"= 2\pi \cdot 3.75\,\mathrm{MHz} \cdot 220\,\mu\mathrm{H} \approx 5.2\ \mathrm{k\Omega}", size=30, color=TEXT)).arrange(RIGHT, buff=0.2)
+        zc = VGroup(TeX(r"|Z_C| = \frac{1}{\omega C}", size=34, color=APL),
+                    TeX(r"= \frac{1}{2\pi \cdot 3.75\,\mathrm{MHz} \cdot 220\,\mathrm{nF}} \approx 0.2\ \Omega", size=30, color=TEXT)).arrange(RIGHT, buff=0.2)
+        nums = VGroup(zl, zc).arrange(DOWN, buff=0.3, aligned_edge=LEFT).move_to([0, -2.75, 0])
+        nb = BackgroundRectangle(nums, color=BG, fill_opacity=0.92, buff=0.2)
+        dc_note = T("at DC: exactly the other way round", size=18, color=MUTED).next_to(nums, RIGHT, buff=0.4)
+        with self.voice(
+            "{num}Some numbers make it concrete. In a typical design, at 3.75 megahertz, a 220-microhenry inductor has an "
+            "impedance of about five kilohms — fifty times the line's hundred ohms, so it barely loads the signal. "
+            "{cap}A 220-nanofarad capacitor, at the same frequency, is just a fifth of an ohm. {dc}At DC, it's exactly the "
+            "other way round."
+        ) as v:
+            self.play(FadeIn(nb), Write(zl), run_time=1.6)
+            v.wait_until("cap")
+            self.play(Write(zc), run_time=1.6)
+            v.wait_until("dc")
+            dc_note.next_to(nums, UP, buff=0.15).align_to(nums, RIGHT)
+            self.play(FadeIn(dc_note), run_time=0.6)
+
         for m in (pf1, pf2, df1, df2):
             m.clear_updaters()
+        self.clear(run_time=0.6)
+
+        # ------------------------------------------------------------ why the trunk uses up to 50 V: I^2 R
+        f1 = TeX(r"P_{\text{loss}} = I^2 R_{\text{loop}}", r"= \left(\frac{P}{V}\right)^{2} R_{\text{loop}}", size=40).move_to([-3.1, 2.3, 0])
+        f1[1].set_color(POWER)
+        bars = VGroup()
+        for i, (v_, loss, col) in enumerate(((24, 4, DANGER), (48, 1, GOOD))):
+            y = 0.85 - i * 0.95
+            r = Rectangle(width=0.9 * loss, height=0.55, fill_color=col, fill_opacity=0.85, stroke_width=0).move_to([-4.7, y, 0], aligned_edge=LEFT)
+            lab = T(f"{v_} V", size=22, color=TEXT, weight=BOLD).next_to([-4.7, y, 0], LEFT, buff=0.25)
+            val = T("loss × 4" if loss == 4 else "loss × 1", size=19, color=col, weight=BOLD).next_to(r, RIGHT, buff=0.15)
+            bars.add(VGroup(r, lab, val))
+        same_p = T("same power delivered", size=17, color=MUTED).next_to(bars, DOWN, buff=0.25).align_to(bars, LEFT)
+        pax = Axes(x_range=[0, 1, 0.25], y_range=[0, 1.15, 0.25], x_length=5.6, y_length=3.6,
+                   axis_config={"stroke_color": DIM, "include_tip": False, "include_ticks": False}).move_to([3.6, -0.3, 0])
+        parab = pax.plot(lambda x: 4 * x * (1 - x), x_range=[0, 1, 0.01], color=POWER, stroke_width=4)
+        peak = Dot(pax.c2p(0.5, 1.0), radius=0.08, color=POWER)
+        pk_l = TeX(r"P_{\max} = \frac{V^2}{4R_{\text{loop}}}", size=34, color=POWER).next_to(peak, UP, buff=0.2)
+        eff = T("only at 50 % efficiency", size=17, color=MUTED).next_to(pax.c2p(0.5, 0.0), UP, buff=0.25)
+        dl = DashedLine(pax.c2p(0.5, 0), pax.c2p(0.5, 1.0), dash_length=0.06, stroke_color=POWER, stroke_width=1.5)
+        x_l = T("current I", size=17, color=MUTED).next_to(pax, DOWN, buff=0.12).align_to(pax, RIGHT)
+        y_l = TeX(r"P_{\text{load}} = V I - I^2 R_{\text{loop}}", size=28, color=TEXT).next_to(pax, UP, buff=0.75).align_to(pax, LEFT)
+        with self.voice(
+            "{why}Why does the trunk run at up to fifty volts? Because the cable's resistance burns I squared R. "
+            "{half}Deliver the same power at twice the voltage, and the current halves — so the loss drops to a quarter. "
+            "{ceil}And there's a hard ceiling. With a source voltage V and a loop resistance R, the most power that can ever "
+            "reach the far end is V squared over four R — and only at fifty percent efficiency. {copper}So a long, powerful "
+            "trunk needs both: voltage, and copper."
+        ) as v:
+            self.play(Write(f1), run_time=1.6)
+            v.wait_until("half")
+            for b_ in bars:
+                self.play(GrowFromEdge(b_[0], LEFT), FadeIn(b_[1]), FadeIn(b_[2]), run_time=0.7)
+            self.play(FadeIn(same_p), run_time=0.4)
+            v.wait_until("ceil")
+            self.play(Create(pax), FadeIn(x_l), FadeIn(y_l), run_time=0.7)
+            self.play(Create(parab), run_time=1.2)
+            self.play(Create(dl), FadeIn(peak, scale=0.5), Write(pk_l), FadeIn(eff), run_time=1.2)
         self.clear(run_time=0.6)
 
         # ------------------------------------------------------------ how much power

@@ -23,7 +23,9 @@ def puzzle_piece(width, height, tab_side, color, label_lines, tab=True):
 
 class IntrinsicSafety(APLScene):
     def construct(self):
-        self.chapter(5, "Intrinsic safety", "Energy too small to ignite", color=HAZARD)
+        self.tag = corner_tag("09 · Power on the same pair", color=POWER)
+        self.add(self.tag)
+        self.chapter(10, "Intrinsic safety", "Energy too small to ignite", color=HAZARD)
 
         # ------------------------------------------------------------ fire triangle
         A, B, C = np.array([0, 2.3, 0]), np.array([-2.3, -1.6, 0]), np.array([2.3, -1.6, 0])

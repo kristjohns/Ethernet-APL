@@ -40,6 +40,38 @@ SPEED = float(os.environ.get("APL_SPEED", "1.0"))
 SR = 24000
 SENTENCE_GAP = 0.42  # pause between sentences inside one voice block [s]
 
+_NUM = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
+        "seventeen eighteen nineteen").split()
+_TENS = "_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()
+
+
+def _two(n: int) -> str:
+    if n < 20:
+        return _NUM[n]
+    t, u = divmod(n, 10)
+    return _TENS[t] + ("" if u == 0 else "-" + _NUM[u])
+
+
+def _year(y: int) -> str:
+    """1858 -> 'eighteen fifty-eight', 1907 -> 'nineteen oh-seven', 2019 -> 'twenty nineteen'."""
+    hi, lo = divmod(y, 100)
+    if y in (2000,):
+        return "two thousand"
+    if 2001 <= y <= 2009:
+        return "two thousand " + _NUM[lo]
+    if lo == 0:
+        return _two(hi) + " hundred"
+    return _two(hi) + " " + (("oh-" + _NUM[lo]) if lo < 10 else _two(lo))
+
+
+def _decade(y: int) -> str:
+    """1880 -> 'eighteen-eighties'."""
+    hi, lo = divmod(y, 100)
+    word = _two(lo)
+    word = word[:-1] + "ies" if word.endswith("y") else word + "s"
+    return _two(hi) + "-" + word
+
+
 # Display text -> what the TTS should say.  Checked against the espeak-ng
 # phonemes Kokoro produces (e.g. "APL" alone is read as "apple").
 SPEECH_RULES: list[tuple[str, str]] = [
@@ -73,10 +105,20 @@ SPEECH_RULES: list[tuple[str, str]] = [
     (r"\bZone 0\b", "Zone zero"),
     (r"\bZone 1\b", "Zone one"),
     (r"\bZone 2\b", "Zone two"),
-    (r"\b1986\b", "nineteen eighty-six"),
-    (r"\b2019\b", "twenty nineteen"),
-    (r"\b1980s\b", "nineteen-eighties"),
-    (r"\b1990s\b", "nineteen-nineties"),
+    (r"\bISDN\b", "I-S-D-N"),
+    (r"Joukowsky", "Zhukovsky"),
+    (r"d'Alembert", "dah-lahm-bair"),
+    (r"10BASE5", "ten base five"),
+    (r"\bmu\b", "mew"),
+    (r"\bXOR\b", "exclusive-or"),
+    (r"\bFIR\b", "F-I-R"),
+    (r"\bFFE\b", "F-F-E"),
+    (r"\bDFE\b", "D-F-E"),
+    (r"\bADC\b", "A-D-C"),
+    (r"\bDAC\b", "D-A-C"),
+    (r"\b(1[0-9])-gauge\b", lambda m: _NUM[int(m.group(1))] + "-gauge"),
+    (r"\b(1[7-9]\d0)s\b", lambda m: _decade(int(m.group(1)))),
+    (r"\b(1[7-9]\d\d|20[0-2]\d)\b(?![,.]\d)(?!\s?(?:m\b|meters|bytes|bits|km|V\b|volts|W\b|watts|Ω|ohms))", lambda m: _year(int(m.group(1)))),
     (r"\b1,200\b", "twelve hundred"),
     (r"\b2,200\b", "twenty-two hundred"),
     (r"4–20 mA", "four to twenty milliamp"),

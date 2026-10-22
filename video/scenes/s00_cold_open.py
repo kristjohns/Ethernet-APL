@@ -276,7 +276,7 @@ class ColdOpen(APLScene):
         self.add(tp)
         title = H("Ethernet-APL", size=110).move_to(UP * 1.75)
         title_glow = glow(title.copy().set_stroke(APL, 2), APL, layers=7, max_width=26, max_opacity=0.16).set_z_index(-1)
-        sub = T("Ethernet, all the way to the field instrument", size=32, color=MUTED).next_to(title, DOWN, buff=0.3)
+        sub = T("a deep dive: Ethernet, all the way to the field instrument", size=32, color=MUTED).next_to(title, DOWN, buff=0.3)
         with self.voice(
             "This video is about the technology that finally brings Ethernet all the way out to the instrument: "
             "{title}Ethernet-APL."
@@ -286,17 +286,22 @@ class ColdOpen(APLScene):
             self.play(Write(title), FadeIn(title_glow), run_time=1.3)
             self.play(FadeIn(sub, shift=UP * 0.15), run_time=0.7)
 
-        chips = VGroup(pill("volts", POWER), pill("symbols", APL), pill("joules", HAZARD)).arrange(RIGHT, buff=0.35)
+        chips = VGroup(pill("bits → volts", POWER), pill("waves on a wire", APL), pill("receivers", VIOLET)).arrange(RIGHT, buff=0.35)
         chips.next_to(sub, DOWN, buff=0.45)
         vs = VGroup(T("compared with", size=28, color=MUTED), T("CAN bus", size=34, color=CAN, weight=BOLD)).arrange(RIGHT, buff=0.22)
         vs.next_to(sub, DOWN, buff=0.45)
         with self.voice(
-            "{volts}We'll take it apart down to the volts, the symbols, and the joules. "
-            "{can}And as a reference point, we'll use a network that many engineers already know from vehicles "
-            "and machines: CAN bus."
+            "{volts}We'll take it apart all the way down: how a bit becomes a voltage, {waves}how that voltage travels "
+            "through a kilometer of copper, {rx}and how the far end pulls it back out of the noise — with a good dose of "
+            "history along the way. {can}And as a reference point, we'll use a network that many engineers already know "
+            "from vehicles and machines: CAN bus."
         ) as v:
             v.wait_until("volts")
-            self.play(LaggedStart(*[FadeIn(c, shift=UP * 0.2) for c in chips], lag_ratio=0.35), run_time=1.4)
+            self.play(FadeIn(chips[0], shift=UP * 0.2), run_time=0.6)
+            v.wait_until("waves")
+            self.play(FadeIn(chips[1], shift=UP * 0.2), run_time=0.6)
+            v.wait_until("rx")
+            self.play(FadeIn(chips[2], shift=UP * 0.2), run_time=0.6)
             v.wait_until("can")
             self.play(FadeOut(chips, shift=UP * 0.2), run_time=0.5)
             self.play(FadeIn(vs, shift=UP * 0.2), run_time=0.8)

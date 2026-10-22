@@ -37,17 +37,28 @@ SCENES = [
     ("s03_can_physical", "CANPhysical"),
     ("s04_can_arbitration", "CANArbitration"),
     ("s05_can_length", "CANLength"),
-    ("s06_apl_topology", "APLTopology"),
-    ("s07_full_duplex", "FullDuplex"),
-    ("s08_pam3", "PAM3"),
-    ("s09_power_data", "PowerData"),
-    ("s10_intrinsic_safety", "IntrinsicSafety"),
-    ("s11_head_to_head", "HeadToHead"),
-    ("s12_outro", "Outro"),
+    ("s06_can_bit_timing", "CANBitTiming"),
+    ("s07_ethernet_history", "EthernetHistory"),
+    ("s08_apl_topology", "APLTopology"),
+    ("s09_telegraph", "Telegraph"),
+    ("s10_waves", "Waves"),
+    ("s11_losses", "Losses"),
+    ("s12_signalling_limits", "SignallingLimits"),
+    ("s13_line_codes", "LineCodes"),
+    ("s14_scrambler", "Scrambler"),
+    ("s15_hybrid", "Hybrid"),
+    ("s16_echo_canceller", "EchoCanceller"),
+    ("s17_equalizer", "Equalizer"),
+    ("s18_clock_recovery", "ClockRecovery"),
+    ("s19_link_up", "LinkUp"),
+    ("s20_power_data", "PowerData"),
+    ("s21_intrinsic_safety", "IntrinsicSafety"),
+    ("s22_head_to_head", "HeadToHead"),
+    ("s23_outro", "Outro"),
 ]
 QUALITY = {"l": ("-ql", "480p15"), "m": ("-qm", "720p30"), "h": ("-qh", "1080p60"), "k": ("-qk", "2160p60")}
-TITLE = "Ethernet-APL, explained — and how it differs from CAN bus"
-STEM = "Ethernet-APL_vs_CAN-bus"
+TITLE = "Ethernet-APL, a deep dive — from the volts on the wire to the plant network (and how it differs from CAN bus)"
+STEM = "Ethernet-APL_deep-dive"
 
 
 def run(cmd, **kw):
@@ -73,7 +84,7 @@ def render_one(idx, file, scene, q, retries=1):
     logs = BUILD / "logs"
     logs.mkdir(parents=True, exist_ok=True)
     out = media / "videos" / file / folder / f"{scene}.mp4"
-    dst = BUILD / f"scenes_{q}" / f"{idx:02d}_{scene}.mp4"
+    dst = BUILD / f"scenes_{q}" / f"{scene}.mp4"
     dst.parent.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     for attempt in range(retries + 1):
@@ -84,7 +95,7 @@ def render_one(idx, file, scene, q, retries=1):
             shutil.copy2(out, dst)
             cue = BUILD / "cues" / f"{scene}.json"
             if cue.exists():
-                shutil.copy2(cue, BUILD / f"scenes_{q}" / f"{idx:02d}_{scene}.json")
+                shutil.copy2(cue, BUILD / f"scenes_{q}" / f"{scene}.json")
             return scene, time.time() - t0
         print(f"  ! {scene} failed (attempt {attempt + 1}), see logs/{q}_{file}.log", flush=True)
     raise RuntimeError(f"render failed: {scene}")
@@ -93,7 +104,8 @@ def render_one(idx, file, scene, q, retries=1):
 def cmd_render(args):
     sel = [(i, f, s) for i, (f, s) in enumerate(SCENES) if not args.scenes or s in args.scenes or f in args.scenes]
     # longest first for better packing on the worker pool
-    weight = {"HeadToHead": 9, "FourWalls": 8, "IntrinsicSafety": 8, "CANArbitration": 7, "WhatIsAPL": 7}
+    weight = {"Losses": 9, "Waves": 9, "Equalizer": 9, "EchoCanceller": 8, "LineCodes": 8, "Scrambler": 8, "Hybrid": 8,
+              "ClockRecovery": 8, "Telegraph": 8, "HeadToHead": 8, "FourWalls": 7, "IntrinsicSafety": 7, "SignallingLimits": 7}
     sel.sort(key=lambda x: -weight.get(x[2], 5))
     print(f"rendering {len(sel)} scenes at {QUALITY[args.quality][1]} with {args.jobs} workers", flush=True)
     with cf.ThreadPoolExecutor(max_workers=args.jobs) as ex:
@@ -163,7 +175,7 @@ def cmd_assemble(args):
     adir = BUILD / f"assembly_{q}"
     adir.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
-    files = [sdir / f"{i:02d}_{s}.mp4" for i, (_, s) in enumerate(SCENES)]
+    files = [sdir / f"{s}.mp4" for _, s in SCENES]
     missing = [f.name for f in files if not f.exists()]
     if missing:
         sys.exit(f"missing renders: {missing}")
@@ -195,7 +207,7 @@ def cmd_assemble(args):
     # 3) cues & chapters
     cues, chapters = [], []
     for (_, s), off in zip(SCENES, offsets):
-        j = json.loads((BUILD / "cues" / f"{s}.json").read_text())
+        j = json.loads((sdir / f"{s}.json").read_text())   # cues logged by the render at this quality
         cues += [{"start": c["start"] + off, "end": c["end"] + off, "text": c["text"]} for c in j["cues"]]
         chapters += [{"time": c["time"] + off, "title": c["title"]} for c in j.get("chapters", [])]
     chapters.sort(key=lambda c: c["time"])
@@ -245,6 +257,7 @@ def cmd_assemble(args):
         end = chapters[i + 1]["time"] if i + 1 < len(chapters) else total
         lines += ["[CHAPTER]", "TIMEBASE=1/1000", f"START={int(ch['time'] * 1000)}", f"END={int(end * 1000)}", f"title={ch['title']}", ""]
     meta.write_text("\n".join(lines))
+    (adir / "chapters.json").write_text(json.dumps({"total": total, "chapters": chapters}, indent=1))
     write_transcript(cues, chapters)
 
     # 7) mux (+ backdrop glow blended with "lighten", which forces a re-encode)
@@ -265,8 +278,9 @@ def cmd_assemble(args):
     cmd += ["-map", "2:s", "-map_metadata", "3", "-map_chapters", "3"]
     track0 = "Narration only" if args.no_music else "Narration + music"
     if args.reencode or args.backdrop:
+        kf = ",".join(f"{c['time']:.3f}" for c in chapters if c["time"] > 0.5)
         cmd += ["-c:v", "libx264", "-preset", args.preset, "-crf", str(args.crf), "-tune", "animation", "-pix_fmt", "yuv420p",
-                "-profile:v", "high", "-movflags", "+faststart"]
+                "-profile:v", "high", "-movflags", "+faststart", "-force_key_frames", kf]
     else:
         cmd += ["-c:v", "copy", "-movflags", "+faststart"]
     cmd += ["-c:a", "aac", "-b:a:0", "160k", "-b:a:1", "96k", "-c:s", "mov_text", "-metadata:s:s:0", "language=eng",
@@ -280,6 +294,35 @@ def cmd_assemble(args):
     run(cmd)
     size = final.stat().st_size / 1e6
     print(f"wrote {final} ({size:.1f} MB), {srt.name}", flush=True)
+
+
+def cmd_parts(args):
+    """Split the final video at chapter boundaries into parts small enough for a plain git push (< 100 MB each)."""
+    q = args.quality
+    adir = BUILD / f"assembly_{q}"
+    info = json.loads((adir / "chapters.json").read_text())
+    chapters, total = info["chapters"], info["total"]
+    final = OUT / f"{STEM}.mp4"
+    starts = [c["time"] for c in chapters]
+    titles = [c["title"] for c in chapters]
+    # group chapters into parts by the chapter numbers that start each part
+    cut_titles = args.cuts or ["05", "07"]
+    cuts = [0.0] + [next(c["time"] for c in chapters if c["title"].startswith(t)) for t in cut_titles] + [total]
+    pdir = OUT / "parts"
+    pdir.mkdir(parents=True, exist_ok=True)
+    for k in range(len(cuts) - 1):
+        t0, t1 = cuts[k], cuts[k + 1]
+        meta = adir / f"part{k + 1}_chapters.txt"
+        lines = [";FFMETADATA1", f"title={TITLE} — part {k + 1} of {len(cuts) - 1}", ""]
+        inside = [(s_, t_) for s_, t_ in zip(starts, titles) if t0 - 0.01 <= s_ < t1 - 0.01]
+        for i, (s_, t_) in enumerate(inside):
+            e_ = inside[i + 1][0] if i + 1 < len(inside) else t1
+            lines += ["[CHAPTER]", "TIMEBASE=1/1000", f"START={int((s_ - t0) * 1000)}", f"END={int((e_ - t0) * 1000)}", f"title={t_}", ""]
+        meta.write_text("\n".join(lines))
+        out = pdir / f"{STEM}_part{k + 1}.mp4"
+        run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{t0:.3f}", "-to", f"{t1:.3f}", "-i", str(final), "-i", str(meta),
+             "-map", "0", "-map_metadata", "1", "-map_chapters", "1", "-c", "copy", "-movflags", "+faststart", str(out)])
+        print(f"wrote {out.name}: {t0 / 60:.1f}–{t1 / 60:.1f} min, {out.stat().st_size / 1e6:.1f} MB", flush=True)
 
 
 def write_transcript(cues, chapters):
@@ -308,7 +351,8 @@ def write_transcript(cues, chapters):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["render", "assemble", "all"])
+    ap.add_argument("cmd", choices=["render", "assemble", "all", "parts"])
+    ap.add_argument("--cuts", nargs="*", help="chapter-number prefixes where parts start (parts command)")
     ap.add_argument("-q", "--quality", default="h", choices=list(QUALITY))
     ap.add_argument("-j", "--jobs", type=int, default=4)
     ap.add_argument("--scenes", nargs="*")
@@ -322,6 +366,8 @@ def main():
         cmd_render(args)
     if args.cmd in ("assemble", "all"):
         cmd_assemble(args)
+    if args.cmd == "parts":
+        cmd_parts(args)
 
 
 if __name__ == "__main__":
