@@ -3,3 +3,6 @@ build/
 __pycache__/
 *.pyc
 media/
+
+# full-length deep dive exceeds GitHub's 100 MB file limit; the repo stores it in output/parts/
+output/Ethernet-APL_deep-dive.mp4

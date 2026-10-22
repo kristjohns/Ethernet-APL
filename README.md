@@ -10,11 +10,18 @@ gigabit Ethernet.
 Written for an engineer with a mechanical background and working knowledge of controls, signals and
 electronics. Formulas are welcome; mechanical analogies are used wherever they carry real insight.
 
-**Video (deep dive, 48 min):** [`output/Ethernet-APL_deep-dive.mp4`](output/Ethernet-APL_deep-dive.mp4)
-— in the repository as three parts, split at chapter boundaries (GitHub limits single files to 100 MB):
+**Video (deep dive, 48 min):** stored as three parts, split at chapter boundaries, because GitHub limits single
+files to 100 MB:
 [part 1](output/parts/Ethernet-APL_deep-dive_part1.mp4) (intro to chapter 04),
 [part 2](output/parts/Ethernet-APL_deep-dive_part2.mp4) (chapters 05–06: the wire, bits to symbols),
 [part 3](output/parts/Ethernet-APL_deep-dive_part3.mp4) (chapters 07–11 and summary).
+To join them into one file without re-encoding:
+
+```bash
+cd output/parts && printf "file '%s'\n" Ethernet-APL_deep-dive_part{1,2,3}.mp4 > list.txt \
+  && ffmpeg -f concat -safe 0 -i list.txt -map 0 -c copy ../Ethernet-APL_deep-dive.mp4
+```
+
 The first, shorter version (17 min) is still here too: [`output/Ethernet-APL_vs_CAN-bus.mp4`](output/Ethernet-APL_vs_CAN-bus.mp4).
 
 * chapter markers are embedded (skip between chapters in VLC, QuickTime, mpv …)
