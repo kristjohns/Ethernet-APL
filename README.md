@@ -35,17 +35,17 @@ The first, shorter version (17 min) is still here too: [`output/Ethernet-APL_vs_
 |---|---|---|
 | 00:00 | Intro | A radar level transmitter knows a lot but reports one number over 4–20 mA; the plan for the deep dive |
 | 01:07 | 01 · The last kilometer | 4–20 mA live zero, HART FSK on the loop current, fieldbus, the four walls that kept Ethernet out of the field |
-| 03:06 | 02 · One new layer | APL replaces only the physical layer: 10BASE-T1L + port profiles (IEC TS 63444) + 2-WISE (IEC TS 60079-47) |
-| 04:31 | 03 · Our reference: CAN bus | Dominant/recessive, differential reception, bitwise arbitration, frame anatomy, bit rate × length ≈ constant, bit timing with time quanta, hard sync, resynchronisation and bit stuffing |
-| 09:32 | 04 · From coax to one pair | Metcalfe's 1973 coax “ether”, CSMA/CD and the 64-byte slot time (CAN's round trip, paid per frame), switches and full duplex, fifty years of Ethernet PHYs; APL's trunk-and-spur topology |
-| 12:45 | 05 · The wire is a waveguide | The 1858 Atlantic cable and Kelvin's law of squares (Fourier's heat equation), Heaviside's telegrapher's equations → the wave equation, mass–spring chain ≡ LC ladder, c = 1/√(L′C′), Z₀ = √(L′/C′), water hammer, reflections, skin effect (δ = 34 µm at 3.75 MHz), cable loss, intersymbol interference, why twisting works |
-| 22:39 | 06 · From bits to symbols | Nyquist, Hartley and Shannon; Manchester vs PAM-2/3/4 at 10 Mbit/s; 4B3T and running disparity; baseline wander; the 33-bit scrambler (period ≈ 14 min); the complete transmitter |
-| 29:21 | 07 · Two directions, one pair | Superposition on a linear line, the telephone hybrid, the transceiver hybrid with replica network, a 50 dB echo budget, the LMS echo canceller converging, why the two scramblers differ, the family tree from 1960 to 2019 |
-| 34:44 | 08 · Inside the receiver | Receive chain, cursors, FFE vs DFE, Lucky's adaptive equalizer, the eye opening, slicer and Q-function (20 dB for 10⁻⁹), the clock-recovery PLL as a control loop, loop timing, auto-negotiation and training |
-| 40:49 | 09 · Power on the same pair | Frequency separation of DC power and data, inductor and capacitor impedances, I²R and P_max = V²/4R, power budgets |
-| 42:49 | 10 · Intrinsic safety | Fire triangle, zones, spark energy vs minimum ignition energy, ia/ib/ic, entity calculation vs 2-WISE port profiles |
-| 44:40 | 11 · Head to head | Bandwidth per device, rate–distance, frames and addressing, 1 MB transfer times, system and physical-layer tables |
-| 47:06 | Summary | Party line vs private line; a century of ideas in one chip; from the sensor to the cloud |
+| 03:05 | 02 · One new layer | APL replaces only the physical layer: 10BASE-T1L + port profiles (IEC TS 63444) + 2-WISE (IEC TS 60079-47) |
+| 04:29 | 03 · Our reference: CAN bus | Dominant/recessive, differential reception, bitwise arbitration, frame anatomy, bit rate × length ≈ constant, bit timing with time quanta, hard sync, resynchronisation and bit stuffing |
+| 09:29 | 04 · From coax to one pair | Metcalfe's 1973 coax “ether”, CSMA/CD and the 64-byte slot time (CAN's round trip, paid per frame), switches and full duplex, fifty years of Ethernet PHYs; APL's trunk-and-spur topology |
+| 12:42 | 05 · The wire is a waveguide | The 1858 Atlantic cable and Kelvin's law of squares (Fourier's heat equation), Heaviside's telegrapher's equations → the wave equation, mass–spring chain ≡ LC ladder, c = 1/√(L′C′), Z₀ = √(L′/C′), water hammer, reflections, skin effect (δ = 34 µm at 3.75 MHz), cable loss, intersymbol interference, why twisting works |
+| 22:36 | 06 · From bits to symbols | Nyquist, Hartley and Shannon; Manchester vs PAM-2/3/4 at 10 Mbit/s; 4B3T and running disparity; baseline wander; the 33-bit scrambler (period ≈ 14 min); the complete transmitter |
+| 29:17 | 07 · Two directions, one pair | Superposition on a linear line, the telephone hybrid, the transceiver hybrid with replica network, a 50 dB echo budget, the LMS echo canceller converging, why the two scramblers differ, the family tree from 1960 to 2019 |
+| 34:40 | 08 · Inside the receiver | Receive chain, cursors, FFE vs DFE, Lucky's adaptive equalizer, the eye opening, slicer and Q-function (20 dB for 10⁻⁹), the clock-recovery PLL as a control loop, loop timing, auto-negotiation and training |
+| 40:44 | 09 · Power on the same pair | Frequency separation of DC power and data, inductor and capacitor impedances, I²R and P_max = V²/4R, power budgets |
+| 42:44 | 10 · Intrinsic safety | Fire triangle, zones, spark energy vs minimum ignition energy, ia/ib/ic, entity calculation vs 2-WISE port profiles |
+| 44:34 | 11 · Head to head | Bandwidth per device, rate–distance, frames and addressing, 1 MB transfer times, system and physical-layer tables |
+| 47:00 | Summary | Party line vs private line; a century of ideas in one chip; from the sensor to the cloud |
 <!-- chapters:end -->
 
 All facts and figures are sourced in [`docs/research_notes.md`](docs/research_notes.md);

@@ -22,7 +22,7 @@ Meanwhile, the rest of industry moved to Ethernet, at a hundred megabits per sec
 
 So why didn't plain Ethernet simply run out into the plant? Four walls stood in the way. Distance. Standard 100BASE-TX Ethernet is limited to one hundred meters per link, while field cables run for hundreds of meters — sometimes a kilometer or more. Wires. Office Ethernet needs two or four pairs; plants are full of installed two-wire cable. Power. A field instrument has no local supply. It must be powered over the same two wires that carry its signal. And explosion protection. In hazardous areas, the energy in a circuit must be limited, so that not even a fault can ignite the atmosphere. Ordinary Ethernet was never designed for that. Ethernet-APL — the Advanced Physical Layer — was designed to break all four walls. The key word is “physical”.
 
-## 02 · One new layer  `03:06`
+## 02 · One new layer  `03:05`
 
 APL replaces only the bottom layer of the network stack: the copper, the voltages, the power, and the safety rules. Everything above it is unchanged Ethernet: the same frames and MAC addresses, IP, TCP and UDP, and the industrial protocols on top — PROFINET, EtherNet/IP, HART-IP, OPC UA, Modbus TCP — even a web server inside the instrument.
 
@@ -30,7 +30,7 @@ Its foundation is 10BASE-T1L, part of the IEEE 802.3cg standard from 2019: ten m
 
 The result: two wires, ten megabits per second in both directions, power and data together, trunks up to one kilometer, and intrinsically safe spurs that reach all the way into Zone 0.
 
-## 03 · Our reference: CAN bus  `04:31`
+## 03 · Our reference: CAN bus  `04:29`
 
 Before we open up APL, let's set up our reference. CAN, the Controller Area Network, was presented by Bosch in 1986 to tame the growing tangle of wiring in cars. Today it's everywhere: vehicles, tractors, robots, medical devices.
 
@@ -54,7 +54,7 @@ One more detail of CAN's physical layer will matter later. There is no clock wir
 
 Every frame begins with a hard synchronization on the very first recessive-to-dominant edge: the start of frame. After that, whenever a recessive-to-dominant edge arrives a little early or late, the receiver stretches phase segment one, or shortens phase segment two, by a few quanta, and realigns. And that's the real reason for bit stuffing: after five identical bits there must be an edge, so the oscillators can never drift apart for long. Keep this picture in mind. CAN recovers its timing from occasional edges. APL will need something far finer.
 
-## 04 · From coax to one pair  `09:32`
+## 04 · From coax to one pair  `09:29`
 
 Ethernet itself started out as a party line, not so different from CAN. In 1973, at Xerox PARC, Bob Metcalfe sketched a network in which every computer tapped into one shared coaxial cable: the 'ether'. Before sending, a station listened. If two started at the same moment, their signals collided, and both backed off and tried again later: carrier sense, multiple access, with collision detection.
 
@@ -70,7 +70,7 @@ A typical plant uses a trunk-and-spur layout. In the safe area, an APL power swi
 
 From here on, we'll follow a single bit through the physical layer. A transmitter turns bits into voltages. A kilometer of twisted pair carries them — and mangles them on the way. And a receiver turns whatever arrives back into bits. We'll start in the middle, with the wire itself.
 
-## 05 · The wire is a waveguide  `12:45`
+## 05 · The wire is a waveguide  `12:42`
 
 In the summer of 1858, the first telegraph cable across the Atlantic went into service, from Ireland to Newfoundland. It was a triumph — and a disappointment. A crisp pulse sent at one end arrived at the other smeared out over seconds. Queen Victoria's ninety-eight-word greeting took most of a day to get through.
 
@@ -118,7 +118,7 @@ One more enemy comes from outside: interference. A motor cable nearby produces a
 
 We know what the wire does to a signal. Now, on to the transmitter: how should bits become voltages?
 
-## 06 · From bits to symbols  `22:39`
+## 06 · From bits to symbols  `22:36`
 
 Given a cable like this, how fast can we signal? Engineers at Bell Labs asked exactly that about telegraph and telephone lines in the 1920s. In 1928, Harry Nyquist showed that a channel with a bandwidth of B hertz can carry at most two B independent pulses per second. The ideal pulse is the sinc function. It rings — but its ringing passes through zero at exactly every other pulse's sampling instant. Line them up, one symbol apart, sample at the right moments, and each sample sees only its own pulse. No interference, in a channel only half as wide as the symbol rate. For APL, 7.5 million symbols per second need at least 3.75 megahertz of bandwidth. That's the Nyquist frequency we keep meeting.
 
@@ -146,7 +146,7 @@ So here's the complete transmitter. Bits from the Ethernet MAC are scrambled, gr
 
 Our symbols are on the wire. But the far end is transmitting too — at the same time, on the same two wires.
 
-## 07 · Two directions, one pair  `29:21`
+## 07 · Two directions, one pair  `29:17`
 
 How can that possibly work? Because the cable is linear. Two waves travelling in opposite directions simply pass through each other. The voltage anywhere on the line is just their sum: v-plus of x minus c t, plus v-minus of x plus c t — d'Alembert's solution again. On a CAN bus, two transmitters at once means a contest between states, settled by arbitration. On a linear line, it's just addition.
 
@@ -170,7 +170,7 @@ And so we arrive at the deepest difference between the two physical layers. CAN 
 
 With its own echo removed, the receiver is left with the far end's signal — weak, smeared, and with a closed eye. Time to open it.
 
-## 08 · Inside the receiver  `34:44`
+## 08 · Inside the receiver  `34:40`
 
 Here's the whole receive path. An amplifier with automatic gain control, and an analog-to-digital converter. Then, all in the digital domain: the echo canceller, the equalizer, the decision, and finally the descrambler and the 4B3T decoder. Two feedback loops complete the picture: decision feedback, which we'll meet in a moment, and clock recovery, which decides when to sample.
 
@@ -194,7 +194,7 @@ Then training begins. The master sends a scrambled stream of idle symbols, while
 
 Let's follow one bit from end to end. It's scrambled, grouped with three others, and turned into three ternary symbols. A voltage step launches a wave into the cable, which carries it at two-thirds of the speed of light, strips away about ninety-five percent of its amplitude, and smears it across its neighbors — all while a wave travelling the other way passes straight through it. At the far end, the receiver subtracts its own echo, undoes the smearing, picks the right instant to sample, decides plus, zero or minus, and decodes and descrambles. Five microseconds and a few clever filters later, the bit is back — with fewer than one error in a billion.
 
-## 09 · Power on the same pair  `40:49`
+## 09 · Power on the same pair  `40:44`
 
 Power travels on the same two wires, and the trick is frequency, again. Power is direct current, at zero hertz. The data lives between roughly a hundred kilohertz and a few megahertz — and, thanks to the DC-free code, it contains no DC of its own.
 
@@ -204,7 +204,7 @@ Why does the trunk run at up to fifty volts? Because the cable's resistance burn
 
 How much power? An APL power switch can feed a trunk with up to about ninety-two watts at the source. An instrument on an intrinsically safe spur gets roughly half a watt to one watt, depending on its power class. That sounds modest — but it's more than ten times the forty milliwatts or so that a four-to-twenty milliamp instrument has to live on.
 
-## 10 · Intrinsic safety  `42:49`
+## 10 · Intrinsic safety  `42:44`
 
 Now the fourth wall: explosive atmospheres. An explosion needs three things: fuel, oxygen, and an ignition source. In a process plant, you can't always remove the first two.
 
@@ -216,7 +216,7 @@ Protection level “i-a” means the circuit stays safe even with two simultaneo
 
 Traditionally, every intrinsically safe loop needed a calculation: does the source's voltage, current and power fit the device, and does the cable's capacitance and inductance fit what's left? 2-WISE replaces that with predefined port profiles. A 2-WISE field-switch port and a 2-WISE instrument with matching profiles are designed to be safe together, on up to two hundred meters of spur cable. You compare the labels, and you're done — much like FISCO did for fieldbus. CAN has no standardized plug-and-play equivalent: intrinsically safe CAN systems exist, but they're engineered case by case. For APL, intrinsic safety was a design goal from day one.
 
-## 11 · Head to head  `44:40`
+## 11 · Head to head  `44:34`
 
 Let's put the two side by side. Bandwidth. On classic CAN, one megabit per second at most — and that's at forty meters — shared by every node on the bus. With ten nodes, each gets, on average, a tenth. On APL, every device has a private ten megabits per second, in each direction.
 
@@ -232,7 +232,7 @@ And underneath, the two physical layers could hardly be more different. CAN: two
 
 So is APL simply better? No. CAN is cheap: a CAN controller is built into countless microcontrollers, and its frames are tiny and efficient. Its arbitration gives hard, priority-based timing on short buses — exactly what vehicles and machines need. Ethernet-APL solves a different problem: long cables, hazardous areas, power over two wires, and rich data from every instrument — using the same IP-based networking as the rest of the enterprise.
 
-## Summary  `47:06`
+## Summary  `47:00`
 
 So, to sum up. CAN is a party line. Everyone shares one pair of wires, the most important voice always wins, and speed and distance trade off against each other. Ethernet-APL is a private line from every instrument: point to point, full duplex, ten megabits per second up to a kilometer, power and data on the same two wires, and intrinsically safe all the way into Zone 0.
 

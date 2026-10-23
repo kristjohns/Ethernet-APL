@@ -151,6 +151,23 @@ def srt_time(t):
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
+def two_lines(p, width=42):
+    """Balanced line break for one subtitle chunk (at most two lines; greedy wrapping can leave three)."""
+    if len(p) <= width:
+        return p
+    words = p.split()
+    best, score = None, None
+    for i in range(1, len(words)):
+        left, right = " ".join(words[:i]), " ".join(words[i:])
+        sc = max(len(left), len(right)) - (4 if words[i - 1].endswith((",", ";", ":")) else 0)
+        if score is None or sc < score:
+            best, score = i, sc
+    left, right = " ".join(words[:best]), " ".join(words[best:])
+    if max(len(left), len(right)) <= width + 4:
+        return left + "\n" + right
+    return "\n".join(textwrap.wrap(p, width=width))
+
+
 def build_srt(cues):
     out, n = [], 1
     for c in cues:
@@ -159,7 +176,7 @@ def build_srt(cues):
         t = c["start"]
         for p in parts:
             dur = (c["end"] - c["start"]) * len(p) / total
-            body = "\n".join(textwrap.wrap(p, width=42))
+            body = two_lines(p)
             out.append(f"{n}\n{srt_time(t)} --> {srt_time(t + dur)}\n{body}\n")
             n += 1
             t += dur
@@ -321,8 +338,34 @@ def cmd_parts(args):
         meta.write_text("\n".join(lines))
         out = pdir / f"{STEM}_part{k + 1}.mp4"
         run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{t0:.3f}", "-to", f"{t1:.3f}", "-i", str(final), "-i", str(meta),
-             "-map", "0", "-map_metadata", "1", "-map_chapters", "1", "-c", "copy", "-movflags", "+faststart", str(out)])
+             "-map", "0:v", "-map", "0:a", "-map", "0:s", "-map_metadata", "1", "-map_chapters", "1", "-c", "copy",
+             "-movflags", "+faststart", str(out)])
         print(f"wrote {out.name}: {t0 / 60:.1f}–{t1 / 60:.1f} min, {out.stat().st_size / 1e6:.1f} MB", flush=True)
+
+
+def cmd_subs(args):
+    """Regenerate subtitles and transcript from the cue logs and swap the subtitle track in the final file."""
+    q = args.quality
+    sdir = BUILD / f"scenes_{q}"
+    files = [sdir / f"{s}.mp4" for _, s in SCENES]
+    durs = [probe_duration(f) for f in files]
+    offsets = np.concatenate([[0], np.cumsum(durs)[:-1]])
+    cues, chapters = [], []
+    for (_, s), off in zip(SCENES, offsets):
+        j = json.loads((sdir / f"{s}.json").read_text())
+        cues += [{"start": c["start"] + off, "end": c["end"] + off, "text": c["text"]} for c in j["cues"]]
+        chapters += [{"time": c["time"] + off, "title": c["title"]} for c in j.get("chapters", [])]
+    chapters.sort(key=lambda c: c["time"])
+    srt = OUT / f"{STEM}.srt"
+    srt.write_text(build_srt(cues))
+    write_transcript(cues, chapters)
+    final = OUT / f"{STEM}.mp4"
+    tmp = final.with_suffix(".tmp.mp4")
+    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(final), "-i", str(srt), "-map", "0:v", "-map", "0:a", "-map", "1:0",
+         "-map_metadata", "0", "-map_chapters", "0", "-c", "copy", "-c:s", "mov_text", "-metadata:s:s:0", "language=eng",
+         "-metadata:s:s:0", "handler_name=English", "-disposition:s:0", "0", "-movflags", "+faststart", str(tmp)])
+    tmp.replace(final)
+    print(f"subtitles: {srt.name} ({len(cues)} sentences), remuxed {final.name}", flush=True)
 
 
 def write_transcript(cues, chapters):
@@ -351,7 +394,7 @@ def write_transcript(cues, chapters):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["render", "assemble", "all", "parts"])
+    ap.add_argument("cmd", choices=["render", "assemble", "all", "parts", "subs"])
     ap.add_argument("--cuts", nargs="*", help="chapter-number prefixes where parts start (parts command)")
     ap.add_argument("-q", "--quality", default="h", choices=list(QUALITY))
     ap.add_argument("-j", "--jobs", type=int, default=4)
@@ -366,6 +409,8 @@ def main():
         cmd_render(args)
     if args.cmd in ("assemble", "all"):
         cmd_assemble(args)
+    if args.cmd == "subs":
+        cmd_subs(args)
     if args.cmd == "parts":
         cmd_parts(args)
 
